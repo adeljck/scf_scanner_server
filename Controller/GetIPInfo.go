@@ -3,7 +3,7 @@ package Controller
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"scf_scanner_server_gin/Modules"
+	"scf_scanner_server/Modules"
 )
 
 func GetIPInfo(c *gin.Context) {
