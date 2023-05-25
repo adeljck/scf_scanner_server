@@ -1,6 +1,6 @@
 package main
 
-import "scf_scanner_server_gin/Router"
+import "scf_scanner_server/Router"
 
 func main() {
 	Router.InitRouter()
