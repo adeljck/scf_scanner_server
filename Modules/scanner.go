@@ -24,6 +24,9 @@ func (S *Scanner) Scan() {
 	case KSCAN:
 		cmd = exec.Command("./tools/k", runArgs...)
 		break
+	case DIRSCAN:
+		cmd = exec.Command("./tools/gd", runArgs...)
+		break
 	default:
 		return
 	}
