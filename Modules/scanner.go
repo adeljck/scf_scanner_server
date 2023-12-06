@@ -3,36 +3,40 @@ package Modules
 import (
 	"fmt"
 	"os/exec"
+	ip2 "scf_scanner_server/Modules/ip"
+	"strings"
 )
 
 type Scanner struct {
-	Ip        string `form:"ip" json:"ip"`
-	Ports     string `form:"port" json:"ports"`
-	ExecParam string `form:"execParam" json:"execParam"`
-	Results   string
+	Type    int    `json:"type" binding:"required"`
+	Args    string `json:"args"  binding:"required"`
+	Results string
 }
 
-func (S *Scanner) FScan() {
-	cmd := exec.Command("./tools/f", "-h", S.Ip, "-p", S.Ports, "-t", "2048", "-time", "5", "-full", "-np", "-no")
-	if S.Ports == "" {
-		cmd = exec.Command("./tools/f", "-h", S.Ip, "-t", "2048", "-time", "5", "-full", "-np", "-no")
+func (S *Scanner) Scan() {
+	runArgs := strings.Split(S.Args, " ")
+	cmd := new(exec.Cmd)
+	switch S.Type {
+	case FSCAN:
+		runArgs = append(runArgs, "-no")
+		cmd = exec.Command("./tools/f", runArgs...)
+		break
+	case KSCAN:
+		cmd = exec.Command("./tools/k", runArgs...)
+		break
+	default:
+		return
 	}
 	out, err := cmd.CombinedOutput()
+	if S.Args == "-h" {
+		S.Results = string(out)
+		return
+	}
 	if err != nil {
-		S.Results = fmt.Sprintf("cmd.Run() failed with %s\n", err)
+		S.Results = fmt.Sprintf("Execute Comand is %s \ncmd.Run() failed with %s\n", cmd.String(), err)
+		return
 	}
-	S.Results = S.Results + string(out)
-}
-
-func (S *Scanner) KScan() {
-	cmd := exec.Command("./tools/k", "-t", S.Ip, "-p", S.Ports, "--threads", "2048", "--timeout", "5")
-	if S.Ports == "" {
-		cmd = exec.Command("./tools/k", "-t", S.Ip, "--threads", "2048", "--timeout", "5")
-	}
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		S.Results = ""
-		S.Results = fmt.Sprintf("cmd.Run() failed with %s\n", err)
-	}
-	S.Results = S.Results + string(out)
+	var ip ip2.IPInfo
+	ip.GetCurrentRequestIPInfo()
+	S.Results = S.Results + fmt.Sprintf("requests_ip:%s\nrun command:%s\n\n\n\n", ip.Query, cmd.String()) + string(out)
 }
